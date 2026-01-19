@@ -1,6 +1,59 @@
-# Agent Instructions
+# Reader iOS - Agent Instructions
 
 This project uses **bd** (beads) for issue tracking and **gt** (Gas Town) for agent coordination.
+
+---
+
+## Project Overview
+
+Reader iOS is a native SwiftUI companion app for the Reader book tracking service. Users log in and browse their book shelves on iPhone.
+
+### Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| UI Framework | SwiftUI |
+| Language | Swift 5.9+ |
+| Minimum iOS | 17.0 |
+| Networking | URLSession (async/await) |
+| Storage | Keychain (credentials only) |
+| Dependencies | None (pure Apple frameworks) |
+
+### Key Files
+
+- **Services/APIClient.swift** - Network layer + all data models
+- **Services/AuthManager.swift** - Authentication state (@Observable)
+- **Services/KeychainHelper.swift** - Secure credential storage
+- **Views/LoginView.swift** - Login screen
+- **Views/ShelvesListView.swift** - Shelves list
+- **Views/ShelfDetailView.swift** - Books in shelf
+- **Views/BookDetailView.swift** - Single book details
+
+### Backend API
+
+Communicates with Reader Rails backend at `http://localhost:3000` (dev).
+
+```
+POST /api/v1/sessions        # Login → user_id + api_key
+GET  /api/v1/shelves         # List shelves
+GET  /api/v1/shelves/:id     # Shelf with books (in progress)
+GET  /api/v1/books/:id       # Book details (in progress)
+```
+
+*All GET requests require `?api_key=...&user_id=...` query params.*
+
+### Building
+
+Open `booktracker-ios.xcodeproj` in Xcode and build for simulator or device.
+
+### Documentation
+
+- `doc/PRD.md` - Product requirements
+- `doc/SDD.md` - Software design
+- `doc/reader_platform_roadmap.md` - Cross-platform roadmap
+- `doc/screen_api_mapping.md` - Screen to API mapping
+
+---
 
 ## Quick Reference
 

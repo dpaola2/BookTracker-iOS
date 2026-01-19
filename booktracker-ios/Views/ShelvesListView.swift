@@ -73,7 +73,9 @@ struct ShelvesListView: View {
                     }
                 } else {
                     List(viewModel.shelves, id: \.id) { shelf in
-                        ShelfRow(shelf: shelf)
+                        NavigationLink(destination: ShelfDetailView(shelfId: shelf.id, shelfName: shelf.name)) {
+                            ShelfRow(shelf: shelf)
+                        }
                     }
                     .refreshable {
                         await viewModel.loadShelves()

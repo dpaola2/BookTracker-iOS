@@ -34,6 +34,28 @@ struct Shelf: Codable {
     }
 }
 
+struct BookDetailResponse: Codable {
+    let book: BookDetail
+}
+
+struct BookDetail: Codable {
+    let id: Int
+    let title: String
+    let author: String?
+    let isbn: String?
+    let shelfId: Int
+    let shelfName: String
+    let imageUrl: String?
+    let comments: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, author, isbn, comments
+        case shelfId = "shelf_id"
+        case shelfName = "shelf_name"
+        case imageUrl = "image_url"
+    }
+}
+
 // MARK: - API Errors
 
 enum APIError: Error {
@@ -114,6 +136,38 @@ struct APIClient {
 
         do {
             return try JSONDecoder().decode(ShelvesResponse.self, from: data)
+        } catch {
+            throw APIError.decodingError(error)
+        }
+    }
+
+    // MARK: - Books
+
+    static func getBook(id: Int) async throws -> BookDetailResponse {
+        guard let apiKey = KeychainHelper.get(key: "api_key"),
+              let userId = KeychainHelper.get(key: "user_id") else {
+            throw APIError.unauthorized
+        }
+
+        guard let url = URL(string: "\(baseURL)/api/v1/books/\(id)?api_key=\(apiKey)&user_id=\(userId)") else {
+            throw APIError.invalidURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            if httpResponse.statusCode == 401 {
+                throw APIError.unauthorized
+            }
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+
+        do {
+            return try JSONDecoder().decode(BookDetailResponse.self, from: data)
         } catch {
             throw APIError.decodingError(error)
         }

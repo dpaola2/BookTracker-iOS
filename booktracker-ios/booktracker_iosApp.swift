@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct booktracker_iosApp: App {
+    @State private var authManager = AuthManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(authManager)
         }
     }
 }

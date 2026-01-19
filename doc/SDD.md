@@ -38,7 +38,9 @@ booktracker-ios/
 │   └── KeychainHelper.swift    # Secure credential storage
 └── Views/
     ├── LoginView.swift         # Login form + AuthViewModel
-    └── ShelvesListView.swift   # Shelves list + ShelvesViewModel
+    ├── ShelvesListView.swift   # Shelves list + ShelvesViewModel
+    ├── ShelfDetailView.swift   # Books in shelf + ShelfDetailViewModel
+    └── BookDetailView.swift    # Single book + BookDetailViewModel
 ```
 
 ### Component Diagram
@@ -64,22 +66,18 @@ booktracker-ios/
 ┌───────────┐    ┌────────────────┐
 │ LoginView │    │ ShelvesListView│
 └───────────┘    └────────────────┘
-      │                  │
-      ▼                  ▼
-┌───────────┐    ┌────────────────┐
-│AuthViewModel│  │ ShelvesViewModel│
-└───────────┘    └────────────────┘
-      │                  │
-      └────────┬─────────┘
-               ▼
-         ┌───────────┐
-         │ APIClient │
-         └───────────┘
-               │
-               ▼
-        ┌─────────────┐
-        │KeychainHelper│
-        └─────────────┘
+                         │
+                         ▼
+                 ┌────────────────┐
+                 │ ShelfDetailView│
+                 └────────────────┘
+                         │
+                         ▼
+                 ┌────────────────┐
+                 │ BookDetailView │
+                 └────────────────┘
+
+All views use ViewModels → APIClient → KeychainHelper
 ```
 
 ---
@@ -126,6 +124,53 @@ struct Shelf: Codable, Identifiable {
 }
 ```
 
+### ShelfDetailResponse
+
+```swift
+struct ShelfDetailResponse: Codable {
+    let shelf: ShelfInfo
+    let books: [BookSummary]
+}
+
+struct ShelfInfo: Codable {
+    let id: Int
+    let name: String
+}
+
+struct BookSummary: Codable {
+    let id: Int
+    let title: String
+    let author: String?
+    let isbn: String?
+}
+```
+
+### BookDetailResponse
+
+```swift
+struct BookDetailResponse: Codable {
+    let book: BookDetail
+}
+
+struct BookDetail: Codable {
+    let id: Int
+    let title: String
+    let author: String?
+    let isbn: String?
+    let shelfId: Int
+    let shelfName: String
+    let imageUrl: String?
+    let comments: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, author, isbn, comments
+        case shelfId = "shelf_id"
+        case shelfName = "shelf_name"
+        case imageUrl = "image_url"
+    }
+}
+```
+
 ---
 
 ## Services
@@ -167,11 +212,19 @@ class AuthManager {
 Static network client for API communication.
 
 ```swift
-class APIClient {
+struct APIClient {
     static var baseURL = "http://localhost:3000"
 
+    // Authentication
     static func login(email: String, password: String) async throws -> AuthResponse
+    static func logout()  // Clears Keychain
+
+    // Shelves
     static func getShelves() async throws -> ShelvesResponse
+    static func getShelf(id: Int) async throws -> ShelfDetailResponse
+
+    // Books
+    static func getBook(id: Int) async throws -> BookDetailResponse
 }
 ```
 
@@ -212,7 +265,7 @@ struct LoginView: View {
 
 - **State**: `@StateObject` for ShelvesViewModel
 - **Features**: Pull-to-refresh, loading/error states
-- **Navigation**: NavigationStack for future detail views
+- **Navigation**: NavigationStack with NavigationLink to ShelfDetailView
 
 ```swift
 struct ShelvesListView: View {
@@ -221,10 +274,68 @@ struct ShelvesListView: View {
 
     var body: some View {
         NavigationStack {
-            // List of shelves, logout button in toolbar
+            List(viewModel.shelves) { shelf in
+                NavigationLink(value: shelf) {
+                    // Shelf row with name and book count
+                }
+            }
+            .navigationDestination(for: Shelf.self) { shelf in
+                ShelfDetailView(shelf: shelf, onLogout: onLogout)
+            }
         }
         .task { await viewModel.loadShelves() }
         .refreshable { await viewModel.loadShelves() }
+    }
+}
+```
+
+### ShelfDetailView
+
+- **State**: `@StateObject` for ShelfDetailViewModel
+- **Input**: Shelf object (id, name)
+- **Features**: Loading/error states, NavigationLink to BookDetailView
+
+```swift
+struct ShelfDetailView: View {
+    let shelf: Shelf
+    @StateObject private var viewModel = ShelfDetailViewModel()
+    var onLogout: () -> Void
+
+    var body: some View {
+        List(viewModel.books) { book in
+            NavigationLink(value: book) {
+                // Book row with title and author
+            }
+        }
+        .navigationTitle(shelf.name)
+        .navigationDestination(for: BookSummary.self) { book in
+            BookDetailView(bookId: book.id, onLogout: onLogout)
+        }
+        .task { await viewModel.loadShelf(id: shelf.id) }
+    }
+}
+```
+
+### BookDetailView
+
+- **State**: `@StateObject` for BookDetailViewModel
+- **Input**: Book ID
+- **Features**: Loading/error states, displays full book details with cover image
+
+```swift
+struct BookDetailView: View {
+    let bookId: Int
+    @StateObject private var viewModel = BookDetailViewModel()
+    var onLogout: () -> Void
+
+    var body: some View {
+        ScrollView {
+            // Cover image (AsyncImage if imageUrl present)
+            // Title, author, ISBN
+            // Shelf name
+            // Comments/notes
+        }
+        .task { await viewModel.loadBook(id: bookId) }
     }
 }
 ```

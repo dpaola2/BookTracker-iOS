@@ -4,6 +4,18 @@ This project uses **bd** (beads) for issue tracking and **gt** (Gas Town) for ag
 
 ---
 
+## BEFORE YOU START (READ THIS FIRST)
+
+**Crew and Polecats: ALWAYS pull before doing any work.**
+
+```bash
+git pull origin main
+```
+
+Polecats merge work while you're offline. If you skip this step, you'll work on stale code and potentially duplicate or conflict with completed work.
+
+---
+
 ## Project Overview
 
 Reader iOS is a native SwiftUI companion app for the Reader book tracking service. Users log in and browse their book shelves on iPhone.
@@ -58,13 +70,19 @@ Open `booktracker-ios.xcodeproj` in Xcode and build for simulator or device.
 ## Quick Reference
 
 ```bash
+# FIRST: Always sync before starting
+git pull origin main
+
+# Find and claim work
 bd ready              # Find available work
 bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-gt hook               # Check your hooked work
-gt done               # Signal completion to Gas Town
+gt hook               # Check your hooked work (polecats)
+
+# Complete work
+bd close <id>         # Mark work done
+bd sync               # Sync beads
+git push origin HEAD  # Push changes
+gt done               # Signal done (polecats only)
 ```
 
 ---

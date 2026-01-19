@@ -20,9 +20,13 @@ gt done               # Signal completion to Gas Town
 
 If you are a **polecat** (worker agent), follow this EXACT workflow:
 
-### 1. On Startup - Check Your Hook
+### 1. On Startup - Sync and Check Hook
 
 ```bash
+# FIRST: Pull latest from main (polecats may have merged while you were idle)
+git pull origin main
+
+# THEN: Check your assigned work
 gt hook
 ```
 
@@ -94,8 +98,20 @@ git push origin HEAD
 
 Crew members follow the same workflow but without `gt done` (you're managed by a human, not Gas Town).
 
+### CRITICAL: Pull Before Starting Work
+
+Crew worktrees persist across sessions. Polecats may have merged work to main while you were offline. **ALWAYS pull before starting any work:**
+
 ```bash
-# On completion:
+# EVERY session start - MANDATORY
+git pull origin main
+```
+
+If you skip this, you'll be working on stale code and may miss features that polecats already implemented.
+
+### On Completion
+
+```bash
 git add -A && git commit -m "..."
 bd close <bead-id>
 bd sync

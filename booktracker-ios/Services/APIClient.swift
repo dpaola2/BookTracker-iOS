@@ -18,13 +18,8 @@ struct AuthResponse: Codable {
 }
 
 struct ShelvesResponse: Codable {
-    let user: User
+    let user: String  // API returns email as string
     let shelves: [Shelf]
-}
-
-struct User: Codable {
-    let id: Int
-    let email: String
 }
 
 struct Shelf: Codable {

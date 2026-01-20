@@ -40,7 +40,7 @@ struct BookDetailResponse: Codable {
 
 struct ShelfDetailResponse: Codable {
     let shelf: ShelfInfo
-    let books: [BookSummary]
+    let books: [BookSummary]?
 }
 
 struct ShelfInfo: Codable {

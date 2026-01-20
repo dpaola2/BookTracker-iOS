@@ -29,7 +29,7 @@ class ShelfDetailViewModel: ObservableObject {
         do {
             let response = try await APIClient.getShelf(id: shelfId)
             shelfName = response.shelf.name
-            books = response.books
+            books = response.books ?? []
         } catch let apiError as APIError {
             switch apiError {
             case .unauthorized:

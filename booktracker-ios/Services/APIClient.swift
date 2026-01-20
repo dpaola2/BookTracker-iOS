@@ -39,13 +39,19 @@ struct BookDetailResponse: Codable {
 }
 
 struct ShelfDetailResponse: Codable {
-    let shelf: ShelfInfo
-    let books: [BookSummary]?
+    let shelf: ShelfDetail
 }
 
-struct ShelfInfo: Codable {
+struct ShelfDetail: Codable {
     let id: Int
     let name: String
+    let bookCount: Int
+    let books: [BookSummary]
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, books
+        case bookCount = "book_count"
+    }
 }
 
 struct BookSummary: Codable {

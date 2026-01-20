@@ -102,15 +102,50 @@ struct BookRow: View {
     let book: BookSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(book.title)
-                .font(.headline)
-            if let author = book.author {
-                Text(author)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            if let imageUrl = book.imageUrl, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 50, height: 75)
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 75)
+                            .clipped()
+                            .cornerRadius(4)
+                    case .failure:
+                        bookPlaceholder
+                    @unknown default:
+                        bookPlaceholder
+                    }
+                }
+                .frame(width: 50, height: 75)
+            } else {
+                bookPlaceholder
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(book.title)
+                    .font(.headline)
+                if let author = book.author {
+                    Text(author)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
+    }
+
+    private var bookPlaceholder: some View {
+        Image(systemName: "book.closed.fill")
+            .font(.title)
+            .foregroundStyle(.secondary)
+            .frame(width: 50, height: 75)
+            .background(Color(.systemGray5))
+            .cornerRadius(4)
     }
 }
 

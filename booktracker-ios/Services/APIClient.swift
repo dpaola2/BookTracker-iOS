@@ -59,6 +59,12 @@ struct BookSummary: Codable {
     let title: String
     let author: String?
     let isbn: String?
+    let imageUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, author, isbn
+        case imageUrl = "image_url"
+    }
 }
 
 struct BookDetail: Codable {

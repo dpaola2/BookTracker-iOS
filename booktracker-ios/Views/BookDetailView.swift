@@ -24,11 +24,14 @@ class BookDetailViewModel: ObservableObject {
     func loadBook() async {
         isLoading = true
         error = nil
+        print("📚 BookDetailViewModel: Loading book \(bookId)")
 
         do {
             let response = try await APIClient.getBook(id: bookId)
+            print("📚 BookDetailViewModel: Got response for book \(bookId)")
             book = response.book
         } catch let apiError as APIError {
+            print("📚 BookDetailViewModel: API error: \(apiError)")
             switch apiError {
             case .unauthorized:
                 error = "Session expired. Please log in again."

@@ -207,6 +207,7 @@ struct APIClient {
     static func getBook(id: Int) async throws -> BookDetailResponse {
         guard let apiKey = KeychainHelper.get(key: "api_key"),
               let userId = KeychainHelper.get(key: "user_id") else {
+            print("📡 APIClient.getBook: No credentials")
             throw APIError.unauthorized
         }
 
@@ -214,7 +215,9 @@ struct APIClient {
             throw APIError.invalidURL
         }
 
+        print("📡 APIClient.getBook: Fetching \(url)")
         let (data, response) = try await URLSession.shared.data(from: url)
+        print("📡 APIClient.getBook: Response received, \(data.count) bytes")
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -228,8 +231,14 @@ struct APIClient {
         }
 
         do {
-            return try JSONDecoder().decode(BookDetailResponse.self, from: data)
+            let decoded = try JSONDecoder().decode(BookDetailResponse.self, from: data)
+            print("📡 APIClient.getBook: Decoded successfully")
+            return decoded
         } catch {
+            print("📡 APIClient.getBook: Decoding failed: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📡 APIClient.getBook: Raw JSON: \(jsonString)")
+            }
             throw APIError.decodingError(error)
         }
     }

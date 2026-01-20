@@ -61,9 +61,9 @@ struct BookDetailView: View {
 
     var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.book == nil {
-                ProgressView("Loading book...")
-            } else if let error = viewModel.error, viewModel.book == nil {
+            if let book = viewModel.book {
+                BookContentView(book: book)
+            } else if let error = viewModel.error {
                 ContentUnavailableView {
                     Label("Error", systemImage: "exclamationmark.triangle")
                 } description: {
@@ -75,17 +75,13 @@ struct BookDetailView: View {
                         }
                     }
                 }
-            } else if let book = viewModel.book {
-                BookContentView(book: book)
+            } else {
+                ProgressView("Loading book...")
             }
         }
         .navigationTitle(viewModel.book?.title ?? "Book Details")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            print("📚 BookDetailView.onAppear")
-        }
         .task {
-            print("📚 BookDetailView.task starting")
             await viewModel.loadBook()
         }
     }

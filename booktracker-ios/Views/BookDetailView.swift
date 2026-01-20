@@ -18,6 +18,7 @@ class BookDetailViewModel: ObservableObject {
     let bookId: Int
 
     init(bookId: Int) {
+        print("📚 BookDetailViewModel.init(bookId: \(bookId))")
         self.bookId = bookId
     }
 
@@ -54,6 +55,7 @@ struct BookDetailView: View {
     @StateObject private var viewModel: BookDetailViewModel
 
     init(bookId: Int) {
+        print("📚 BookDetailView.init(bookId: \(bookId))")
         _viewModel = StateObject(wrappedValue: BookDetailViewModel(bookId: bookId))
     }
 

@@ -93,7 +93,7 @@ enum APIError: Error {
 
 struct APIClient {
 
-    static var baseURL = "http://localhost:3000"
+    static var baseURL = "https://read.davepaola.com"
 
     // MARK: - Authentication
 

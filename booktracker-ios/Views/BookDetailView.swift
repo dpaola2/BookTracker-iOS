@@ -5,6 +5,7 @@
 
 import SwiftUI
 import Combine
+import WebKit
 
 // MARK: - ViewModel
 
@@ -85,6 +86,7 @@ struct BookDetailView: View {
 
 struct BookContentView: View {
     let book: BookDetail
+    @State private var commentsHeight: CGFloat = 100
 
     var body: some View {
         ScrollView {
@@ -139,8 +141,8 @@ struct BookContentView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Notes")
                                 .font(.headline)
-                            Text(comments)
-                                .foregroundStyle(.secondary)
+                            HTMLTextView(html: comments, dynamicHeight: $commentsHeight)
+                                .frame(height: commentsHeight)
                         }
                     }
                 }
@@ -148,6 +150,97 @@ struct BookContentView: View {
             }
             .padding(.vertical)
         }
+    }
+}
+
+// MARK: - HTML Text View
+
+struct HTMLTextView: UIViewRepresentable {
+    let html: String
+    @Binding var dynamicHeight: CGFloat
+
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.scrollView.isScrollEnabled = false
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+        webView.navigationDelegate = context.coordinator
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let wrappedHTML = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 1.5;
+                    color: \(UIColor.label.hexString);
+                    background-color: transparent;
+                    -webkit-text-size-adjust: 100%;
+                }
+                p { margin-bottom: 12px; }
+                p:last-child { margin-bottom: 0; }
+                a { color: \(UIColor.tintColor.hexString); }
+                strong, b { font-weight: 600; }
+                ul, ol { padding-left: 20px; margin-bottom: 12px; }
+                li { margin-bottom: 4px; }
+            </style>
+        </head>
+        <body>\(html)</body>
+        </html>
+        """
+        webView.loadHTMLString(wrappedHTML, baseURL: nil)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: HTMLTextView
+
+        init(_ parent: HTMLTextView) {
+            self.parent = parent
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+                if let height = result as? CGFloat {
+                    DispatchQueue.main.async {
+                        self.parent.dynamicHeight = height
+                    }
+                }
+            }
+        }
+
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+            } else {
+                decisionHandler(.allow)
+            }
+        }
+    }
+}
+
+// MARK: - UIColor Extension
+
+private extension UIColor {
+    var hexString: String {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
     }
 }
 

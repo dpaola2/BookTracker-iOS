@@ -81,7 +81,11 @@ struct BookDetailView: View {
         }
         .navigationTitle(viewModel.book?.title ?? "Book Details")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            print("📚 BookDetailView.onAppear")
+        }
         .task {
+            print("📚 BookDetailView.task starting")
             await viewModel.loadBook()
         }
     }
